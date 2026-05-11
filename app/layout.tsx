@@ -27,8 +27,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "Rhythm Cluster 律动簇｜音频设计与后期制作",
-    description:
-      "用声音与技术叙事，为品牌与作品建立记忆点。",
+    description: "用声音与技术叙事，为品牌与作品建立记忆点。",
     type: "website",
     locale: "zh_CN",
   },
@@ -40,8 +39,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full bg-neutral-950 text-neutral-100">{children}</body>
+    <html lang="zh-CN" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  if (theme === 'dark' || (!theme && systemDark)) {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} min-h-full antialiased`}
+      >
+        {children}
+      </body>
     </html>
   );
 }
