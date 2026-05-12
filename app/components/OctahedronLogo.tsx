@@ -92,6 +92,9 @@ export default function OctahedronLogo3D() {
       linewidth: 3, // 3px ≈ 当前 1px 的 3 倍
       transparent: true,
       opacity: 0.85,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
     });
     lineMaterial.resolution.set(WIDTH, HEIGHT);
 
@@ -283,8 +286,8 @@ export default function OctahedronLogo3D() {
     const breatheUp = () => {
       if (!isActive) return;
       animate(group.position, {
-        y: 0.08,
-        duration: 1250,
+        y: 0.05,
+        duration: 2200,
         ease: "inOutSine",
         onComplete: breatheDown,
       });
@@ -292,13 +295,13 @@ export default function OctahedronLogo3D() {
     const breatheDown = () => {
       if (!isActive) return;
       animate(group.position, {
-        y: -0.08,
-        duration: 1250,
+        y: -0.05,
+        duration: 2200,
         ease: "inOutSine",
         onComplete: breatheUp,
       });
     };
-    setTimeout(() => breatheUp(), 1400);
+    setTimeout(() => breatheUp(), 1800);
 
     // ─── Cleanup ───
     return () => {
