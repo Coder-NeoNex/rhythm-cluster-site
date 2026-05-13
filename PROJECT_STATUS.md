@@ -1,5 +1,5 @@
 # Rhythm Cluster Site — Project Status Snapshot
-# Generated: 2026-05-12
+# Generated: 2026-05-10
 # Purpose: Full codebase snapshot for context window recovery
 
 ================================================================================
@@ -15,6 +15,7 @@
 - Deploy: `npm run deploy` → PowerShell `deploy.ps1` → `robocopy out/ A:\` (NAS)
 - Verification URL: http://192.168.1.240:8080/
 - Dev URL (NOT for visual verify): localhost:3000 (Turbopack behavior differs)
+- GitHub: https://github.com/Coder-NeoNex/rhythm-cluster-site.git
 
 ================================================================================
 ## 2. FILE STRUCTURE
@@ -59,6 +60,7 @@ rhythm-cluster-site/
 
 ### Three.js Line2 注意
 - `LineMaterial` 必须设置 `resolution.set(WIDTH, HEIGHT)`，否则粗线渲染不正确
+- `polygonOffset: true` + `polygonOffsetFactor: -1` + `polygonOffsetUnits: -1` 可避免线框与面片深度冲突
 
 ### Tailwind v4
 - 使用 `@import "tailwindcss"` 而非 v3 的 `@tailwind` 指令
@@ -66,9 +68,10 @@ rhythm-cluster-site/
 - 无 `tailwind.config.js`，配置内联于 CSS
 
 ### Theme System
-- 自研方案（未使用 next-themes 包）
+- 自研方案（未使用 next-themes 包，虽然 package.json 中误安装了）
 - 内联 Script 在 hydration 前执行，避免闪烁
 - `suppressHydrationWarning` 在 html 标签上
+- `MutationObserver` + `matchMedia` 监听主题切换，OctahedronLogo 实时响应
 
 ================================================================================
 ## 4. SOURCE FILES — COMPLETE CONTENT
@@ -170,15 +173,48 @@ export default function OctahedronLogo3D() {
 
     const lineMaterial = new LineMaterial({
       color: 0xffffff,
-      linewidth: 3, // 3px ≈ 当前 1px 的 3 倍
+      linewidth: 3,
       transparent: true,
       opacity: 0.85,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
     });
     lineMaterial.resolution.set(WIDTH, HEIGHT);
 
     const wireframe = new Line2(lineGeometry, lineMaterial);
     wireframe.scale.set(0, 0, 0);
     group.add(wireframe);
+
+    // ─── Theme-aware Colors ───
+    const DARK_FACE_COLORS = [0x151515,0x151515,0x151515,0x151515,0x060606,0x060606,0x060606,0x060606];
+    const LIGHT_FACE_COLORS = [0xeaeaea,0xeaeaea,0xeaeaea,0xeaeaea,0xf5f5f5,0xf5f5f5,0xf5f5f5,0xf5f5f5];
+    const DARK_WIREFRAME = 0xffffff;
+    const LIGHT_WIREFRAME = 0x1a1a1a;
+    const DARK_HOVER = 0x2a2a2a;
+    const LIGHT_HOVER = 0xfcfcfc;
+
+    const getIsDark = () =>
+      document.documentElement.classList.contains("dark") ||
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    const applyThemeColors = (isDark: boolean) => {
+      const faceColors = isDark ? DARK_FACE_COLORS : LIGHT_FACE_COLORS;
+      materials.forEach((m, i) => m.color.setHex(faceColors[i]));
+      lineMaterial.color.setHex(isDark ? DARK_WIREFRAME : LIGHT_WIREFRAME);
+    };
+
+    applyThemeColors(getIsDark());
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleThemeChange = () => applyThemeColors(getIsDark());
+    mediaQuery.addEventListener("change", handleThemeChange);
+
+    const observer = new MutationObserver(handleThemeChange);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
 
     // ─── Raycaster ───
     const raycaster = new THREE.Raycaster();
@@ -217,20 +253,20 @@ export default function OctahedronLogo3D() {
         if (hoveredFace !== faceIndex) {
           if (hoveredFace !== null) {
             materials[hoveredFace].color.setHex(
-              hoveredFace < 4 ? 0x151515 : 0x060606
+              (getIsDark() ? DARK_FACE_COLORS : LIGHT_FACE_COLORS)[hoveredFace]
             );
           }
           hoveredFace = faceIndex;
-          materials[faceIndex].color.setHex(0x2a2a2a);
+          materials[faceIndex].color.setHex(getIsDark() ? DARK_HOVER : LIGHT_HOVER);
           container.style.cursor = "pointer";
         }
         return;
       }
 
       if (hoveredFace !== null) {
-        materials[hoveredFace].color.setHex(
-          hoveredFace < 4 ? 0x151515 : 0x060606
-        );
+        const isDark = getIsDark();
+        const faceColors = isDark ? DARK_FACE_COLORS : LIGHT_FACE_COLORS;
+        materials[hoveredFace].color.setHex(faceColors[hoveredFace]);
         hoveredFace = null;
         container.style.cursor = "default";
       }
@@ -241,9 +277,8 @@ export default function OctahedronLogo3D() {
       targetRotationY = BASE_ROTATION_Y;
       targetRotationZ = BASE_ROTATION_Z;
       if (hoveredFace !== null) {
-        materials[hoveredFace].color.setHex(
-          hoveredFace < 4 ? 0x151515 : 0x060606
-        );
+        const mlColors = getIsDark() ? DARK_FACE_COLORS : LIGHT_FACE_COLORS;
+        materials[hoveredFace].color.setHex(mlColors[hoveredFace]);
         hoveredFace = null;
         container.style.cursor = "default";
       }
@@ -258,22 +293,26 @@ export default function OctahedronLogo3D() {
     const handleClick = () => {
       if (hoveredFace === null) return;
       const faceIndex = hoveredFace;
+      const flashColor = getIsDark() ? 0xffffff : 0x000000;
+      const hoverColor = getIsDark() ? DARK_HOVER : LIGHT_HOVER;
+      const hexToUnit = (hex: number) => ({
+        r: ((hex >> 16) & 0xff) / 255,
+        g: ((hex >> 8) & 0xff) / 255,
+        b: (hex & 0xff) / 255,
+      });
 
       animate(materials[faceIndex].color, {
-        r: 128 / 255,
-        g: 128 / 255,
-        b: 128 / 255,
+        ...hexToUnit(flashColor),
         duration: 60,
         ease: "outQuad",
         onComplete: () => {
           if (!isActive) return;
           animate(materials[faceIndex].color, {
-            r: faceIndex < 4 ? 21 / 255 : 6 / 255,
-            g: faceIndex < 4 ? 21 / 255 : 6 / 255,
-            b: faceIndex < 4 ? 21 / 255 : 6 / 255,
+            ...hexToUnit(hoverColor),
             duration: 60,
             ease: "outQuad",
             onComplete: () => {
+              materials[faceIndex].color.setHex(hoverColor);
               doNavigate(faceIndex);
             },
           });
@@ -313,16 +352,16 @@ export default function OctahedronLogo3D() {
 
     // ─── Entrance ───
     animate(mesh.scale, {
-      x: 0.77,
+      x: 0.82,
       y: 1.3,
-      z: 0.77,
+      z: 0.82,
       duration: 1400,
       ease: "outElastic(1, .6)",
     });
     animate(wireframe.scale, {
-      x: 0.77,
+      x: 0.82,
       y: 1.3,
-      z: 0.77,
+      z: 0.82,
       duration: 1400,
       ease: "outElastic(1, .6)",
     });
@@ -331,8 +370,8 @@ export default function OctahedronLogo3D() {
     const breatheUp = () => {
       if (!isActive) return;
       animate(group.position, {
-        y: 0.08,
-        duration: 1250,
+        y: 0.05,
+        duration: 2200,
         ease: "inOutSine",
         onComplete: breatheDown,
       });
@@ -340,13 +379,13 @@ export default function OctahedronLogo3D() {
     const breatheDown = () => {
       if (!isActive) return;
       animate(group.position, {
-        y: -0.08,
-        duration: 1250,
+        y: -0.05,
+        duration: 2200,
         ease: "inOutSine",
         onComplete: breatheUp,
       });
     };
-    setTimeout(() => breatheUp(), 1400);
+    setTimeout(() => breatheUp(), 1800);
 
     // ─── Cleanup ───
     return () => {
@@ -356,6 +395,8 @@ export default function OctahedronLogo3D() {
       container.removeEventListener("mouseleave", handleMouseLeave);
       container.removeEventListener("click", handleClick);
       container.removeEventListener("keydown", handleKeyDown);
+      mediaQuery.removeEventListener("change", handleThemeChange);
+      observer.disconnect();
       renderer.dispose();
       geometry.dispose();
       materials.forEach((m) => m.dispose());
@@ -382,18 +423,23 @@ export default function OctahedronLogo3D() {
 ```
 
 ### OctahedronLogo 关键参数
-- Canvas: 300 x 780 px
+- Canvas: 450 x 780 px
 - Geometry: `OctahedronGeometry(1.2, 0)`
-- Scale: `mesh.scale = (0.77, 1.3, 0.77)` (瘦长菱形)
-- Camera: OrthographicCamera, frustumSize = 6
-- Line2 wireframe: linewidth = 3, opacity = 0.85
+- Scale: `mesh.scale = (0.82, 1.3, 0.82)` (瘦长菱形)
+- Camera: OrthographicCamera, frustumSize = 20, zoom = 3
+- Line2 wireframe: linewidth = 3, opacity = 0.85, polygonOffset: true
+- Surrounding shapes: 20 wireframe shapes (tri1–tri20), Line2 + LineMaterial(linewidth=1.5, opacity=0.4)
+- Wave animation: scale 1→1.012, pop 600ms/outQuad + fall 2400ms/inOutSine + pause 600ms, 350ms stagger per group
 - Materials: 8 个独立 MeshBasicMaterial (0-3: 0x151515, 4-7: 0x060606)
 - Face nav mapping: 0,3→/; 1,2→/about; 4,7→/#contact; 5,6→/courses
 - Base rotation: X=+8°, Y=+17°, Z=0°
 - Mouse follow: X ±15°, Y ±20°
-- Entrance: outElastic(1, .6), 1400ms
-- Breathe: inOutSine, y ±0.08, 1250ms
+- Entrance: outElastic(1, .6), 1400ms, scale 0→0.82/1.3
+- Breathe: inOutSine, y ±0.05, 2200ms, delay 1800ms
 - Smooth factor: 0.05
+- Theme: Dark/Light 自动切换面颜色、线框颜色、hover 颜色
+- Hover: 深色模式 0x2a2a2a，浅色模式 0xfcfcfc
+- Click: 主题感知的"黑→白→hover色"闪烁 (60ms+60ms)，然后导航
 
 --------------------------------------------------------------------------------
 ### FILE: app/components/Navbar.tsx
@@ -1122,10 +1168,21 @@ if ($robocopyExit -ge 8) {
 
 ### 3D Logo Geometry
 - Geometry: OctahedronGeometry(1.2, 0)
-- Mesh scale: (0.77, 1.3, 0.77)
-- Canvas: 300 x 780 px
-- Camera: OrthographicCamera, frustumSize = 6
-- Wireframe: Line2, linewidth = 3, opacity = 0.85
+- Mesh scale: (0.82, 1.3, 0.82)
+- Canvas: 450 x 780 px
+- Camera: OrthographicCamera, frustumSize = 20, zoom = 3
+- Wireframe: Line2, linewidth = 3, opacity = 0.85, polygonOffset enabled
+- Surrounding shapes: 20 wireframe shapes on Z=0 plane (tri1–tri20)
+  - tri1–5: top-left triangles (3 vertices each)
+  - tri6–10: top-right triangles (3 vertices each)
+  - tri11–15: bottom-right triangles (3 vertices each)
+  - tri16–20: bottom-left pentagons (5 vertices each, closed A→B→C→D→E→A)
+
+### Theme Colors
+| Mode | Face 0-3 | Face 4-7 | Wireframe | Hover |
+|------|----------|----------|-----------|-------|
+| Dark | 0x151515 | 0x060606 | 0xffffff  | 0x2a2a2a |
+| Light| 0xeaeaea | 0xf5f5f5 | 0x1a1a1a  | 0xfcfcfc |
 
 ### Face Navigation Mapping
 - Faces 0, 3 → "/"
@@ -1138,8 +1195,15 @@ if ($robocopyExit -ge 8) {
 - Smooth lerp factor: 0.05
 
 ### Animation
-- Entrance: outElastic(1, .6), 1400ms
-- Breathe: inOutSine, y ±0.08, 1250ms
+- Entrance: outElastic(1, .6), 1400ms, delay 0ms
+- Breathe: inOutSine, group.position y ±0.05, 2200ms, delay 1800ms
+- Click: 60ms flash (黑→白)→60ms recover→navigate
+- Wave (surrounding shapes): scale 1.0 → 1.012 centered at origin
+  - Pop-up: 600ms, ease outQuad
+  - Fall-back: 2400ms, ease inOutSine
+  - Pause: 600ms
+  - Group stagger: 350ms internal per group of 5 shapes
+  - Start delay: 2000ms (post-elastic entrance)
 
 ================================================================================
 ## 6. BUILD & DEPLOY NOTES
@@ -1155,7 +1219,10 @@ if ($robocopyExit -ge 8) {
 ## 7. TODO / ACTIVE ISSUES
 ================================================================================
 
-- [CURRENT] 八面体默认姿态已调定为 X=+8°, Y=+17°, Z=0°，待用户最终确认
+- [DONE] 八面体默认姿态已调定为 X=+8°, Y=+17°, Z=0°，用户已确认
+- [DONE] 八面体宽度从 0.77 → 0.82，已部署
+- [DONE] 周围形状坐标（tri1–tri20）全部 finalized，用户已确认绘制正确
+- [DONE] 周围形状波浪动画（scale pulsation）已实现，4组×5个形状，350ms组内交错
 - [PENDING] 首页内容尚未填充（当前仅 Navbar + 3D Logo）
 - [PENDING] /about 页面未创建
 - [PENDING] /#contact 锚点区块未创建
