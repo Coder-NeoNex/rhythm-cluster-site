@@ -2238,5 +2238,201 @@ if ($robocopyExit -ge 8) {
 - [PENDING] /#faq 锚点区块未创建
 
 ================================================================================
+## 8. CODEX MIGRATION GUIDE — 关键上下文
+================================================================================
+
+> 以下信息是迁移到 OpenAI Codex 时必须传达的核心上下文。
+> 复制第 9 节（Codex Onboarding Prompt）直接发给 Codex 即可。
+
+### 必须强调的事项
+
+1. **Next.js 16.2.6 不是标准版本**
+   - API、约定、文件结构均可能与训练数据不同
+   - 写代码前必须先读 `node_modules/next/dist/docs/`
+   - AGENTS.md 中明确标注了这一点
+
+2. **生产验证地址是唯一可信的视觉检查方式**
+   - `localhost:3000` 因 Turbopack + React Strict Mode 不可信
+   - 每次修改后必须 `npm run deploy` → 检查 `http://192.168.1.240:8080/`
+   - 部署脚本：`deploy.ps1`（PowerShell，robocopy 到 NAS）
+
+3. **Three.js Line2 线框的特殊处理**
+   - `LineMaterial.resolution.set(WIDTH, HEIGHT)` 必须设置，否则线宽异常
+   - `polygonOffset: true` + `polygonOffsetFactor/Units: -N` 避免深度冲突
+   - 所有 surrounding shapes 的 LineMaterial 必须设置 resolution
+
+4. **主题系统是自研的（非 next-themes）**
+   - `layout.tsx` 中有内联 Script 在 hydration 前执行
+   - `MutationObserver` + `matchMedia` 监听变化
+   - OctahedronLogo 中通过这两个机制实时响应主题切换
+   - 不要引入 next-themes，虽然它存在于 package.json 中（误安装）
+
+5. **rAF 驱动的 Wave 动画不可随意修改**
+   - `updateWaveScales()` 使用全局时间函数计算所有 shape 的 scale
+   - 涟漪期间 `ripplingShapeIndices` Set 标记跳过 wave 设置
+   - 涟漪结束后 rAF 自动接管到正确相位
+   - 不要回到 per-shape animejs 循环，会导致同步问题
+
+6. **Fill mesh 是 Line2 的子对象**
+   - `triNFace` 是 `triN`（Line2）的子对象，不是 `layerGroups[i]` 的子对象
+   - 这样才能继承 scale 动画（包括 wave 和 ripple）
+   - Fill mesh 的 `scale.set(1,1,1)` 不要改动
+
+### 文件修改优先级（下一步工作）
+
+1. **首页内容填充**（最高优先级）
+   - 当前 `page.tsx` 只有 Navbar + 3D Logo
+   - 需要添加：品牌介绍、服务说明、CTA 等
+   - 设计应与现有的暗色/亮色主题系统兼容
+
+2. **/#contact 锚点区块**
+   - Navbar 中已有"联系"链接指向 `/#contact`
+   - 需要在首页添加对应的 section
+
+3. **/#about 锚点区块**
+   - Navbar 中"关于"链接指向 `/#about`
+
+4. **/#faq 锚点区块**
+   - Navbar 中"FAQ"链接指向 `/#faq`
+
+5. **/#sound-knowledge 锚点区块**
+   - Navbar 下拉菜单中有"声音知识库"
+
+6. **/#audio-timeline 锚点区块**
+   - Navbar 下拉菜单中有"音频编年史"
+
+7. **独立的 /about 页面**（可选，当前通过锚点实现）
+
+### 代码风格约定
+
+- 使用 `"` 双引号（项目现有风格）
+- 箭头函数使用 `const fn = () => {}` 风格
+- Three.js 变量命名：`triN{A-E}` 顶点，`triNPositions` 数组，`triNGeo/Mat` Line2，`triNFaceGeo/Mat/Mesh` fill mesh
+- 注释使用 `// ─── Section Name ───` 风格
+- 组件名使用 PascalCase（`OctahedronLogo3D`）
+
+================================================================================
+## 9. CODEX ONBOARDING PROMPT（直接复制给 Codex）
+================================================================================
+
+```
+# Rhythm Cluster Site — Codex Onboarding
+
+You are working on "rhythm-cluster-site", a Next.js 16.2.6 + React 19.2.4 + 
+TypeScript 5 + Tailwind CSS v4 + animejs 4.4.1 + Three.js 0.184.0 project.
+Package manager: pnpm. Static export via `output: "export"`.
+
+## ⚠️ CRITICAL: Next.js 16 is NOT the version you know
+
+This is Next.js 16.2.6 with BREAKING CHANGES. APIs, conventions, and file 
+structure may all differ from your training data. ALWAYS read 
+`node_modules/next/dist/docs/` before writing any Next.js code. Heed 
+deprecation notices. There is an AGENTS.md file in the project root with 
+this exact warning.
+
+## ⚠️ CRITICAL: Production-only verification
+
+NEVER rely on localhost:3000 for visual verification. Turbopack + React 
+Strict Mode alter DOM/classList behavior in ways that affect Three.js.
+
+The ONLY way to verify visual changes:
+1. `npm run deploy` → runs `deploy.ps1` → `robocopy out/ A:\` (NAS)
+2. Check `http://192.168.1.240:8080/`
+
+Always do this after any code change affecting visuals.
+
+## ⚠️ CRITICAL: Three.js Line2 special requirements
+
+`LineMaterial` MUST have `.resolution.set(WIDTH, HEIGHT)` or linewidth 
+renders incorrectly. `polygonOffset: true` + negative factor/units are 
+required to prevent z-fighting with mesh faces.
+
+## ⚠️ CRITICAL: Theme system is custom (not next-themes)
+
+Do NOT use next-themes. The theme is handled by:
+- Inline script in `app/layout.tsx` (runs before hydration)
+- `MutationObserver` + `matchMedia` in OctahedronLogo.tsx
+- `document.documentElement.classList.contains("dark")` for checks
+
+## ⚠️ CRITICAL: Wave animation is rAF-driven, NOT per-shape animejs
+
+`updateWaveScales()` in the animation loop computes all 20 surrounding 
+shape scales from a global time function. During ripples, shapes are 
+flagged in `ripplingShapeIndices` Set to skip wave updates. Do NOT 
+revert to independent animejs loops per shape — this causes phase drift.
+
+## ⚠️ CRITICAL: Fill meshes are children of Line2 objects
+
+`tri1Face` is a child of `tri1` (Line2), NOT a child of `layerGroups[i]`.
+This inheritance is required for scale animations. Do NOT reparent fill 
+meshes to layerGroups.
+
+## Project Structure
+
+```
+app/
+  components/
+    OctahedronLogo.tsx  ← Core 3D component (1300+ lines, most complex)
+    Navbar.tsx          ← Navigation bar + dropdown + ThemeToggle
+    ThemeToggle.tsx     ← Theme switch (custom, NOT next-themes)
+  courses/
+    page.tsx            ← Courses page (already exists)
+  page.tsx              ← Homepage (ONLY Navbar + 3D Logo currently)
+  layout.tsx            ← Root layout + theme init script
+  globals.css           ← Tailwind v4 + custom animations
+deploy.ps1              ← Build + robocopy to NAS
+AGENTS.md               ← Agent rules (read before any Next.js code)
+```
+
+## Key Parameters (OctahedronLogo.tsx)
+
+- Canvas: 450 x 780 px
+- Camera: OrthographicCamera(frustumSize=20), zoom=3
+- Octahedron: OctahedronGeometry(1.2, 0), scale (0.82, 1.3, 0.82)
+- 8 faces with independent materials, mapped to 4 visible directions:
+  - Faces 4,7 → top-left → tri1-5 ripple
+  - Faces 0,3 → top-right → tri6-10 ripple
+  - Faces 1,2 → bottom-right → tri11-15 ripple
+  - Faces 5,6 → bottom-left → tri16-20 ripple
+- Clicking any face triggers ripple on corresponding surrounding shapes
+- NO navigation on click (router.push removed)
+- Wave: rAF-driven, period 3600ms, group stagger 350ms
+- Ripple: scale 1→1.08→1 (120ms outQuad), fill opacity 0→1→0 (80ms)
+- 5 layerGroups with delayed rotation (lerp factors 0.04→0.017)
+
+## Current State
+
+✅ DONE:
+- 3D octahedron logo with mouse-follow rotation
+- 20 surrounding wireframe shapes (tri1-tri20)
+- Theme-aware colors (faces, wireframe, surrounding shapes)
+- Elastic entrance animation
+- Breathing animation
+- rAF-driven synchronized wave animation
+- 4-direction ripple flash effects (all 20 shapes have fill meshes)
+- Raycaster hover/click detection
+- Navbar with dropdown menus
+- Theme toggle
+- Courses page
+
+❌ PENDING (next steps):
+1. Homepage content (currently empty below the 3D logo)
+2. /#contact anchor section
+3. /#about anchor section
+4. /#faq anchor section
+5. /#sound-knowledge anchor section
+6. /#audio-timeline anchor section
+
+## Workflow Rules
+
+1. Read AGENTS.md before ANY code changes
+2. Read `node_modules/next/dist/docs/` for Next.js 16 APIs
+3. After code changes: `npm run deploy` → verify at `http://192.168.1.240:8080/`
+4. Keep changes MINIMAL
+5. Follow existing code style (double quotes, `// ─── Section ───` comments)
+6. Update PROJECT_STATUS.md if you change architecture or parameters
+```
+
+================================================================================
 END OF PROJECT_STATUS
 ================================================================================
