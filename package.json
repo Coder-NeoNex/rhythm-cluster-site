@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:codex": "/bin/zsh scripts/with-codex-node.sh scripts/codex-build.mjs",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "powershell -ExecutionPolicy Bypass -File deploy.ps1"
+    "deploy": "powershell -ExecutionPolicy Bypass -File deploy.ps1",
+    "deploy:mac": "/bin/zsh scripts/deploy-mac-local.sh"
   },
   "dependencies": {
     "@types/three": "^0.184.1",

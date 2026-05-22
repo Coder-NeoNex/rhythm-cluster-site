@@ -791,9 +791,20 @@ export default function OctahedronLogo3D() {
     const DARK_HOVER = 0x2a2a2a;
     const LIGHT_HOVER = 0xfcfcfc;
 
-    const getIsDark = () =>
-      document.documentElement.classList.contains("dark") ||
-      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const getStoredTheme = () => {
+      try {
+        return localStorage.getItem("theme");
+      } catch {
+        return null;
+      }
+    };
+
+    const getIsDark = () => {
+      const storedTheme = getStoredTheme();
+      if (storedTheme === "dark") return true;
+      if (storedTheme === "light") return false;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    };
 
     const applyThemeColors = (isDark: boolean) => {
       const faceColors = isDark ? DARK_FACE_COLORS : LIGHT_FACE_COLORS;

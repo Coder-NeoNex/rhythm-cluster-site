@@ -2216,6 +2216,12 @@ if ($robocopyExit -ge 8) {
 - Build: `next build` (static export)
 - Deploy: `npm run deploy` → `deploy.ps1`
 - Output dir: `out/` → copied to `A:\` (NAS)
+- Animation baseline whitelist: `OCTAHEDRON_ANIMATION_WHITELIST.md`
+- Mac/Codex deploy: mount NAS with
+  `open "smb://192.168.1.240/rhythm-cluster-site"`, then run `pnpm deploy:mac`
+- `deploy:mac` defaults to `/Volumes/rhythm-cluster-site`, builds with `build:codex`, and copies `out/` contents into the NAS target
+- If macOS mounts the share under another name, override with
+  `NAS_DEPLOY_TARGET="/Volumes/<NAS_SHARE>" pnpm deploy:mac`
 - Verify: http://192.168.1.240:8080/
 - Do NOT use localhost:3000 for visual verification
 
@@ -2431,6 +2437,7 @@ AGENTS.md               ← Agent rules (read before any Next.js code)
 4. Keep changes MINIMAL
 5. Follow existing code style (double quotes, `// ─── Section ───` comments)
 6. Update PROJECT_STATUS.md if you change architecture or parameters
+7. Hard safety rule: Run commands only inside this repository workspace. Any write operation outside this workspace (including external folders, mounted volumes, or system paths) requires explicit user confirmation first.
 ```
 
 ================================================================================

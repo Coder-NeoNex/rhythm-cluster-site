@@ -23,16 +23,25 @@ export default function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    let isActive = true;
     const stored = getStoredTheme();
     const systemDark = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
     const shouldBeDark = stored === "dark" || (!stored && systemDark);
-    setIsDark(shouldBeDark);
     if (shouldBeDark) {
       document.documentElement.classList.add("dark");
     }
-    setMounted(true);
+
+    queueMicrotask(() => {
+      if (!isActive) return;
+      setIsDark(shouldBeDark);
+      setMounted(true);
+    });
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const toggle = () => {
