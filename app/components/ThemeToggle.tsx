@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from "react";
 
+type ThemeToggleVariant = "switch" | "text";
+
+interface ThemeToggleProps {
+  variant?: ThemeToggleVariant;
+  className?: string;
+}
+
 function getStoredTheme(): "light" | "dark" | null {
   try {
     return localStorage.getItem("theme") as "light" | "dark" | null;
@@ -18,7 +25,10 @@ function setStoredTheme(theme: "light" | "dark") {
   }
 }
 
-export default function ThemeToggle() {
+export default function ThemeToggle({
+  variant = "switch",
+  className = "",
+}: ThemeToggleProps) {
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -56,11 +66,37 @@ export default function ThemeToggle() {
   };
 
   if (!mounted) {
+    if (variant === "text") {
+      return (
+        <button
+          type="button"
+          className={`text-xs font-medium text-emerald-700/60 dark:text-emerald-300/60 ${className}`}
+          aria-hidden="true"
+          disabled
+        >
+          深/浅模式
+        </button>
+      );
+    }
+
     return (
       <div
         className="h-7 w-12 shrink-0 rounded-full bg-gray-200"
         aria-hidden="true"
       />
+    );
+  }
+
+  if (variant === "text") {
+    return (
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={`切换主题，当前为${isDark ? "深色" : "浅色"}模式`}
+        className={`nav-link-hover text-xs font-medium text-emerald-700 transition hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-100 ${className}`}
+      >
+        深/浅模式
+      </button>
     );
   }
 

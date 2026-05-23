@@ -10,8 +10,41 @@ import { animate } from "animejs";
 const WIDTH = 450;
 const HEIGHT = 780;
 
-export default function OctahedronLogo3D() {
+export type OctahedronRegion =
+  | "topLeft"
+  | "topRight"
+  | "bottomRight"
+  | "bottomLeft";
+
+interface OctahedronLogoProps {
+  onRegionHoverChange?: (region: OctahedronRegion | null) => void;
+  onRegionClick?: (region: OctahedronRegion) => void;
+  className?: string;
+}
+
+function getRegionByFaceIndex(
+  faceIndex: number
+): OctahedronRegion | null {
+  if (faceIndex === 4 || faceIndex === 7) return "topLeft";
+  if (faceIndex === 0 || faceIndex === 3) return "topRight";
+  if (faceIndex === 1 || faceIndex === 2) return "bottomRight";
+  if (faceIndex === 5 || faceIndex === 6) return "bottomLeft";
+  return null;
+}
+
+export default function OctahedronLogo3D({
+  onRegionHoverChange,
+  onRegionClick,
+  className = "",
+}: OctahedronLogoProps = {}) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const onRegionHoverChangeRef = useRef(onRegionHoverChange);
+  const onRegionClickRef = useRef(onRegionClick);
+
+  useEffect(() => {
+    onRegionHoverChangeRef.current = onRegionHoverChange;
+    onRegionClickRef.current = onRegionClick;
+  }, [onRegionHoverChange, onRegionClick]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -943,6 +976,7 @@ export default function OctahedronLogo3D() {
     // ─── Raycaster ───
     const raycaster = new THREE.Raycaster();
     let hoveredFace: number | null = null;
+    let hoveredRegion: OctahedronRegion | null = null;
 
     // ─── Rotation state ───
     const BASE_ROTATION_X = 8 * (Math.PI / 180);
@@ -988,6 +1022,12 @@ export default function OctahedronLogo3D() {
           hoveredFace = faceIndex;
           materials[faceIndex].color.setHex(getIsDark() ? DARK_HOVER : LIGHT_HOVER);
           container.style.cursor = "pointer";
+
+          const nextRegion = getRegionByFaceIndex(faceIndex);
+          if (hoveredRegion !== nextRegion) {
+            hoveredRegion = nextRegion;
+            onRegionHoverChangeRef.current?.(hoveredRegion);
+          }
         }
         return;
       }
@@ -998,6 +1038,10 @@ export default function OctahedronLogo3D() {
         materials[hoveredFace].color.setHex(faceColors[hoveredFace]);
         hoveredFace = null;
         container.style.cursor = "default";
+      }
+      if (hoveredRegion !== null) {
+        hoveredRegion = null;
+        onRegionHoverChangeRef.current?.(null);
       }
     };
 
@@ -1011,11 +1055,19 @@ export default function OctahedronLogo3D() {
         hoveredFace = null;
         container.style.cursor = "default";
       }
+      if (hoveredRegion !== null) {
+        hoveredRegion = null;
+        onRegionHoverChangeRef.current?.(null);
+      }
     };
 
     const handleClick = () => {
       if (hoveredFace === null) return;
       const faceIndex = hoveredFace;
+      const clickedRegion = getRegionByFaceIndex(faceIndex);
+      if (clickedRegion) {
+        onRegionClickRef.current?.(clickedRegion);
+      }
 
       // Trigger ripple based on which octahedron face region was clicked
       if (faceIndex === 4 || faceIndex === 7) {
@@ -1233,6 +1285,7 @@ export default function OctahedronLogo3D() {
     // ─── Cleanup ───
     return () => {
       isActive = false;
+      onRegionHoverChangeRef.current?.(null);
       ripplingShapeIndices.clear();
       cancelAnimationFrame(animationId);
       container.removeEventListener("mousemove", handleMouseMove);
@@ -1337,7 +1390,7 @@ export default function OctahedronLogo3D() {
     <div
       ref={containerRef}
       style={{ width: WIDTH, height: HEIGHT }}
-      className="relative outline-none"
+      className={`relative outline-none ${className}`}
       role="group"
       aria-label="Rhythm Cluster 3D Logo"
       tabIndex={0}
