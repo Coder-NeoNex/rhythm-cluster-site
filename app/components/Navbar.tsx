@@ -22,7 +22,7 @@ const mainNavItems = [
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const promoText =
-    "律动簇 · Rhythm Cluster · 用心制作的声音创作学习方式 · 条理清晰、高效、轻松理解";
+    "律动簇 · Rhythm Cluster · 用心制作的声音创作学习方式 · 条理清晰、高效、理解更轻松";
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/20 bg-white text-black dark:border-white/20 dark:bg-neutral-950 dark:text-white">
@@ -59,7 +59,7 @@ export default function Navbar() {
       <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-4 md:px-8">
         <Link
           href="/"
-          className="nav-link-hover text-sm font-semibold tracking-[0.12em] text-emerald-700 transition hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-100 md:text-xl"
+          className="nav-link-hover text-sm font-semibold text-emerald-700 transition hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-100 md:text-xl"
         >
           律动簇Logo
         </Link>

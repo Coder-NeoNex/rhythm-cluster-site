@@ -132,7 +132,6 @@ html.dark::-webkit-scrollbar-thumb:hover {
   color: #065f46;
   font-size: 0.75rem;
   font-weight: 500;
-  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 

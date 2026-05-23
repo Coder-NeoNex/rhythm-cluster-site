@@ -3,6 +3,132 @@
 # Purpose: Full codebase snapshot for context window recovery
 
 ================================================================================
+## 0. RECENT HANDOFF UPDATE (2026-05-22 ~ 2026-05-24, for Kimi/Codex continuation)
+================================================================================
+
+> IMPORTANT: This section is the latest handoff log.  
+> The full snapshot below (sections 1+) is older baseline content.
+
+### 0.1 Stable changes already completed
+
+- Theme behavior fix (macOS dark system mode should not override explicit page light mode):
+  - `app/components/ThemeToggle.tsx` + root theme init logic now prioritize `localStorage.theme`.
+  - Issue fixed: in macOS dark mode, page light mode now keeps correct light rendering for octahedron/tri.
+
+- Mac -> Build -> NAS deploy pipeline established:
+  - Added scripts:
+    - `scripts/codex-build.mjs`
+    - `scripts/deploy-mac.mjs`
+    - `scripts/deploy-mac-local.sh`
+    - `scripts/with-codex-node.sh`
+  - `package.json` scripts updated (`build:codex`, `deploy:mac` etc.).
+  - Deployment target confirmed:
+    - `/Volumes/rhythm-cluster-site` -> `http://192.168.1.240:8080/`
+  - Permission note:
+    - "Auto review" sandbox mode previously blocked NAS writes (`operation not permitted`).
+    - Switched to custom/full-access style permission, write+deploy verified working in-session.
+
+- Safety / process docs added:
+  - `OCTAHEDRON_ANIMATION_WHITELIST.md` (EN+ZH baseline).
+  - Hard safety rule added earlier: no write outside workspace without explicit confirmation.
+
+### 0.2 Recent GitHub state
+
+- Latest pushed commit on `main`:
+  - `cf22c71`
+  - message: `feat: implement homepage second-screen scroll structure`
+  - scope: homepage second-screen scroll structure prototype.
+
+### 0.3 What was attempted for homepage screen 1+2
+
+- Implemented:
+  - Top utility bar + promo marquee + header nav structure.
+  - Hero left logo / right slogan + CTA structure.
+  - Scroll-driven transition into screen-2 concept.
+  - Octahedron hover region callbacks added in:
+    - `app/components/OctahedronLogo.tsx`
+      - `onRegionHoverChange`
+      - `onRegionClick`
+      - region mapping: `topLeft/topRight/bottomLeft/bottomRight`
+
+### 0.4 Current known problems / blockers (NEEDS FIX)
+
+These were explicitly reported by the user after `cf22c71`:
+
+1. Typography and spacing are severely off (desktop + mobile).
+2. Screen-2 layout collapses/overlaps during scroll (elements collide, text stack disorder).
+3. The blue guide lines should NOT exist in final UI (they were only sketch guides).
+4. Mobile layout is broken:
+   - hero and second-screen text overlap with octahedron,
+   - sizing and section flow are not stable.
+5. Hero visual alignment issue:
+   - logo and right text are vertically misaligned,
+   - horizontal gap too large.
+
+Status after GPT 5.5 repair attempt on 2026-05-24:
+
+- `app/page.tsx` was reworked locally after `cf22c71`.
+- Blue guide lines have been removed.
+- Desktop layout now uses a more controlled coordinate system:
+  - hero logo/text positions are separated from second-screen title/body positions,
+  - second-screen text is no longer freely piled over the logo,
+  - body copy is smaller and lower to avoid overlap with octahedron.
+- Mobile layout now uses independent linear sections:
+  - mobile no longer uses the desktop scrollytelling absolute-position layout,
+  - octahedron is placed in a fixed-height clipped wrapper to prevent horizontal overflow,
+  - hero text/CTA and screen-2 content no longer overlap with the logo.
+- Verification performed:
+  - `pnpm lint` passed.
+  - `./scripts/deploy-mac-local.sh` passed and deployed to NAS.
+  - Playwright screenshots captured with local Chrome:
+    - `/Users/nigel/Downloads/rhythm-final-desktop-hero.png`
+    - `/Users/nigel/Downloads/rhythm-final-desktop-mid.png`
+    - `/Users/nigel/Downloads/rhythm-final-desktop-second.png`
+    - `/Users/nigel/Downloads/rhythm-final-mobile-hero.png`
+    - `/Users/nigel/Downloads/rhythm-final-mobile-second.png`
+
+Remaining judgment call:
+
+- The current local repair is much more stable than `cf22c71`, but it is still a layout prototype.
+- It likely still needs art-direction tuning: exact logo size, text positions, scroll timing, and background-image treatment.
+
+Additional local iteration after that repair:
+
+- The four screen-2 text groups were changed into four large non-clickable display panels (`RegionPanel` in `app/page.tsx`).
+- These panels are intentionally NOT real `<button>` elements:
+  - they have hover/display behavior only,
+  - no navigation/click action is attached,
+  - this avoids false accessibility semantics while still giving the layout a button-like visual area.
+- Reason:
+  - large panels make the four regions easier to align,
+  - text has a clear spatial container,
+  - future background-image hover states can attach to each panel more cleanly.
+- Verified again:
+  - `pnpm lint` passed.
+  - `./scripts/deploy-mac-local.sh` passed and deployed to NAS.
+  - Playwright screenshots captured:
+    - `/Users/nigel/Downloads/rhythm-panel-hero.png`
+    - `/Users/nigel/Downloads/rhythm-panel-mid.png`
+    - `/Users/nigel/Downloads/rhythm-panel-second.png`
+
+### 0.5 Explicit user intent for next iteration
+
+- Keep structure direction, but fully rework layout quality:
+  - better typography scale,
+  - better spacing rhythm,
+  - no guide lines,
+  - responsive correctness first (especially mobile),
+  - retain the slogan correction: `理解更轻松`.
+
+### 0.6 Local workspace note after `cf22c71`
+
+- After pushing `cf22c71`, additional local rework was started and verified locally, but not yet pushed at the time of this handoff.
+- Before continuing, run:
+  - `git status`
+  - compare local changes vs `origin/main`
+  - decide whether to continue from local WIP or commit/push it before switching agents.
+
+================================================================================
 ## 1. PROJECT OVERVIEW
 ================================================================================
 
