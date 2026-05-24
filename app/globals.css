@@ -129,14 +129,14 @@ html.dark::-webkit-scrollbar-thumb:hover {
 }
 
 .promo-marquee-track span {
-  color: #065f46;
+  color: rgba(0, 0, 0, 0.55);
   font-size: 0.75rem;
   font-weight: 500;
   text-transform: uppercase;
 }
 
 .dark .promo-marquee-track span {
-  color: #6ee7b7;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 @keyframes promo-marquee-scroll {

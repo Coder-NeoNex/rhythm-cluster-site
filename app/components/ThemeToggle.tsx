@@ -70,7 +70,7 @@ export default function ThemeToggle({
       return (
         <button
           type="button"
-          className={`text-xs font-medium text-emerald-700/60 dark:text-emerald-300/60 ${className}`}
+          className={`text-xs font-medium text-black/50 dark:text-white/50 ${className}`}
           aria-hidden="true"
           disabled
         >
@@ -93,7 +93,7 @@ export default function ThemeToggle({
         type="button"
         onClick={toggle}
         aria-label={`切换主题，当前为${isDark ? "深色" : "浅色"}模式`}
-        className={`nav-link-hover text-xs font-medium text-emerald-700 transition hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-100 ${className}`}
+        className={`nav-link-hover text-xs font-medium text-black/60 transition hover:text-black dark:text-white/60 dark:hover:text-white ${className}`}
       >
         深/浅模式
       </button>

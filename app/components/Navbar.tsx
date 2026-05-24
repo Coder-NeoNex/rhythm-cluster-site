@@ -30,7 +30,7 @@ export default function Navbar() {
         <div className="no-scrollbar mx-auto flex h-10 max-w-[1600px] items-center justify-start gap-3 overflow-x-auto px-4 sm:justify-end sm:gap-6 md:px-8">
           <Link
             href={utilityLinks[0].href}
-            className="nav-link-hover shrink-0 text-[11px] font-medium text-emerald-700 transition hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-100 sm:text-xs"
+            className="nav-link-hover shrink-0 text-[11px] font-medium text-black/60 transition hover:text-black dark:text-white/60 dark:hover:text-white sm:text-xs"
           >
             {utilityLinks[0].label}
           </Link>
@@ -39,7 +39,7 @@ export default function Navbar() {
             <Link
               key={item.label}
               href={item.href}
-              className="nav-link-hover shrink-0 text-[11px] font-medium text-emerald-700 transition hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-100 sm:text-xs"
+              className="nav-link-hover shrink-0 text-[11px] font-medium text-black/60 transition hover:text-black dark:text-white/60 dark:hover:text-white sm:text-xs"
             >
               {item.label}
             </Link>
@@ -59,7 +59,7 @@ export default function Navbar() {
       <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-4 md:px-8">
         <Link
           href="/"
-          className="nav-link-hover text-sm font-semibold text-emerald-700 transition hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-100 md:text-xl"
+          className="nav-link-hover text-sm font-semibold text-black transition hover:text-black/80 dark:text-white dark:hover:text-white/80 md:text-xl"
         >
           律动簇Logo
         </Link>
@@ -69,7 +69,7 @@ export default function Navbar() {
             <Link
               key={item.label}
               href={item.href}
-              className="nav-link-hover text-base font-medium text-emerald-700 transition hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-100"
+              className="nav-link-hover text-base font-medium text-black/75 transition hover:text-black dark:text-white/75 dark:hover:text-white"
             >
               {item.label}
             </Link>
@@ -78,7 +78,7 @@ export default function Navbar() {
 
         <button
           type="button"
-          className="inline-flex items-center rounded-md border border-black/20 px-4 py-2 text-sm text-emerald-700 transition hover:border-emerald-700 hover:text-emerald-900 dark:border-white/25 dark:text-emerald-300 dark:hover:border-emerald-200 dark:hover:text-emerald-100 md:hidden"
+          className="inline-flex items-center rounded-md border border-black/20 px-4 py-2 text-sm text-black/75 transition hover:border-black/40 hover:text-black dark:border-white/25 dark:text-white/75 dark:hover:border-white/40 dark:hover:text-white md:hidden"
           onClick={() => setMobileOpen((v) => !v)}
           aria-label="切换导航菜单"
           aria-expanded={mobileOpen}
@@ -94,7 +94,7 @@ export default function Navbar() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="rounded-md px-2 py-2 text-sm font-medium text-emerald-700 transition hover:bg-black/5 hover:text-emerald-900 dark:text-emerald-300 dark:hover:bg-white/5 dark:hover:text-emerald-100"
+                className="rounded-md px-2 py-2 text-sm font-medium text-black/75 transition hover:bg-black/5 hover:text-black dark:text-white/75 dark:hover:bg-white/5 dark:hover:text-white"
                 onClick={() => setMobileOpen(false)}
               >
                 {item.label}
@@ -104,7 +104,7 @@ export default function Navbar() {
               <div className="flex flex-wrap items-center gap-3">
                 <Link
                   href={utilityLinks[0].href}
-                  className="text-xs text-emerald-700 dark:text-emerald-300"
+                  className="text-xs text-black/60 dark:text-white/60"
                 >
                   {utilityLinks[0].label}
                 </Link>
@@ -113,7 +113,7 @@ export default function Navbar() {
                   <Link
                     key={item.label}
                     href={item.href}
-                    className="text-xs text-emerald-700 dark:text-emerald-300"
+                    className="text-xs text-black/60 dark:text-white/60"
                   >
                     {item.label}
                   </Link>

@@ -1,12 +1,66 @@
 # Rhythm Cluster Site — Project Status Snapshot
-# Generated: 2026-05-13
+# Generated: 2026-05-24
 # Purpose: Full codebase snapshot for context window recovery
 
 ================================================================================
-## 0. RECENT HANDOFF UPDATE (2026-05-22 ~ 2026-05-24, for Kimi/Codex continuation)
+## 0. RECENT HANDOFF UPDATE (2026-05-24, Kimi homepage rewrite + layout stabilization)
 ================================================================================
 
-> IMPORTANT: This section is the latest handoff log.  
+> IMPORTANT: This section is the latest handoff log.
+> The full snapshot below (sections 1+) is older baseline content.
+
+### 0.1 Homepage complete rewrite (stable, user-verified)
+
+The previous scroll-driven sticky absolute-position layout (`cf22c71` and local WIP) has been **fully abandoned** and replaced with a standard document-flow section layout.
+
+**What changed:**
+
+- `app/page.tsx` — completely rewritten:
+  - Removed all scroll-driven `useRef` / `useState` / `requestAnimationFrame` progress tracking.
+  - Removed all absolute-position transforms (`translateX/Y`, `scale`, `opacity` fades).
+  - Removed `REGION_TITLES`, `REGION_DESCRIPTION_PLACEHOLDER`, `regionOrder`, `clamp`, `phase` helpers.
+  - **Hero section**: standard flex layout (`flex-col lg:flex-row`), Logo left / text right on desktop, stacked on mobile.
+    - Logo uses responsive scale: `scale-[0.72]` mobile → `scale-[0.85]` tablet → `scale-100` desktop.
+    - Hero title: `用心设计的声音创作学习系统` with `whitespace-nowrap` to prevent line break.
+    - Subtitle: `条理清晰、高效、理解更轻松`.
+    - CTA button: `开始学习` linking to `/courses`.
+  - **Features section**: single section containing title + 3 philosophy lines + 4 feature cards.
+    - Title: `适应新时代的学习方式` (centered).
+    - 3 philosophy lines (centered, no left border):
+      1. `在技术过度发达的「后声音世代」，声音创作的学习生涯望不到尽头`
+      2. `为此，我们设计了兼具广度和深度的内容体系`
+      3. `让你能够闻一知十、一通百通`
+    - 4 cards in a 2×2 grid (`grid-cols-1 md:grid-cols-2`):
+      - 01 自学友好的学习系统 — `结合每个人自己的兴趣导向，实现「学海无涯乐作舟」`
+      - 02 成熟专业的制作技术 — `掌握行业标准工作流，从录音、编辑到混音母带，建立可复用的专业方法论。`
+      - 03 连接声音的过去、现在、未来 — `理解声音文化脉络，融汇经典技法与前沿技术，让你的创作既有根基又有新意。`
+      - 04 寻找你自己的创作之心 — `在系统学习中找到个人风格，将技术内化为直觉，让每一次创作都发自内心。`
+  - **Footer**: standard copyright + tagline.
+
+- Color system — all emerald/green removed from homepage components:
+  - `app/components/Navbar.tsx`: `emerald-*` → neutral `black/white` with opacity.
+  - `app/components/ThemeToggle.tsx`: emerald ring → neutral.
+  - `app/globals.css`: promo marquee track `rgba(16,185,129,…)` → `rgba(0,0,0,0.55)` / `rgba(255,255,255,0.55)`.
+
+- `pnpm-workspace.yaml` — added `packages:\n  - '.'` to fix pnpm "packages field missing or empty" build error.
+
+### 0.2 Deployment & verification
+
+- Build: `pnpm build` → static export to `out/`.
+- Deploy: `npm run deploy` (PowerShell `deploy.ps1` → `robocopy out/ A:\`).
+- Verification URL: http://192.168.1.240:8080/
+- Status: user-verified and approved on 2026-05-24.
+
+### 0.3 Remaining work / next steps
+
+- `app/courses/page.tsx` still uses the original green color scheme — needs to be unified to neutral black/white.
+- No other known blockers.
+
+================================================================================
+## -1. PREVIOUS HANDOFF UPDATE (2026-05-22 ~ 2026-05-24, for Kimi/Codex continuation)
+================================================================================
+
+> IMPORTANT: This section documents the pre-rewrite state.
 > The full snapshot below (sections 1+) is older baseline content.
 
 ### 0.1 Stable changes already completed
